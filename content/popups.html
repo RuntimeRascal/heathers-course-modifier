@@ -1,0 +1,26 @@
+<div id="idleDiv" class="bgDisable">
+    <div id="timerPopup" class="popup">
+        <div id="timerPopupText" class="popup-text">Hello There! You have been
+            idle for a while now. It's time to get back to the course. To continue, click
+            <b>OK</b> or the course will close in 600 seconds.
+        </div>
+        <div id="timerPopupCountDown" class="CountDownText">10</div>
+        <div id="timerPopupOkBtn" class="ok-btn">OK</div>
+    </div>
+</div>
+
+<div id="warningDiv" class="bgDisable">
+    <div id="warningPopup" class="popup">
+        <div id="warningPopupText" class="popup-text">You have ONLY spent <span id="hoursLeft">0</span> hours <span
+                id="minutesLeft">0</span> minutes <span id="secondsLeft">0</span> seconds in this course. You must
+            spend 1 hours 15 minutes
+            in this course to receive credit. Do you still want to exit the course?
+            <div>
+                <div class="btn-wrapper">
+                    <div id="continue-btn" class="continue-btn" onclick="fnHideWarningPopup();">Continue</div>
+                    <div id="exit-btn" class="exit-btn" onclick="fnClose();">Exit</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
