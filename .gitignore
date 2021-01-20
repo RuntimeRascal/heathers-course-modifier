@@ -3,6 +3,7 @@ courses/**
 working/**
 modified-courses/**
 **/*.docx
+*.docx
 
 # Logs
 logs
