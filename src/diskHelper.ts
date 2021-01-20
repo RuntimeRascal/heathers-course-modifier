@@ -1,12 +1,16 @@
 import { readdir, ensureDir, emptyDir, pathExistsSync } from "fs-extra";
-import logger from "./logger";
+import logger, { log } from "./logger";
 import * as extract from "extract-zip";
 import { join } from "path";
+import * as chalk from "chalk";
 
 export class DiskHelper {
     static getCourses = async () => {
-        let courses = await readdir(join(__dirname, '..\\', 'courses'));
-        logger.info('got list of all courses from folder', courses);
+        let courses = [];
+        if (process.env.COURSE_DIR_PATH && process.env.COURSE_DIR_PATH !== '' && pathExistsSync(process.env.COURSE_DIR_PATH)) {
+            courses = await readdir(process.env.COURSE_DIR_PATH);
+        } else
+            courses = await readdir(join(__dirname, '..\\', 'courses'));
         return courses;
     }
 
@@ -14,7 +18,18 @@ export class DiskHelper {
         let path = join(__dirname, '..\\', 'working');
         await ensureDir(path);
         await emptyDir(path);
-        logger.info(`ensured '${path}' exists`);
+        log(`ensured '${chalk.gray(path)}' exists`);
+    };
+
+    static ensureModifiedCoursesDirectory = async () => {
+        let path = join(__dirname, '..\\', 'modified-courses');
+        if (process.env.COURSE_DIR_PATH && process.env.COURSE_DIR_PATH !== '' && pathExistsSync(process.env.COURSE_DIR_PATH)) {
+            path = join(process.env.COURSE_DIR_PATH, 'modified-courses');
+        }
+        await ensureDir(path);
+        await emptyDir(path);
+        log(`ensured '${chalk.gray(path)}' exists`);
+        return path;
     };
 
     static extractSelectedCourses = async (courses: string[]) => {
@@ -25,22 +40,22 @@ export class DiskHelper {
             let extractPath = join(__dirname, '..\\', 'working', course.replace('.zip', ''));
 
             if (!coursePath.endsWith('.zip')) {
-                logger.error('path to course does not appear to be a archive or zip file.', { path: coursePath });
+                console.error(`path to course does not appear to be a archive or zip file. ${JSON.stringify({ path: coursePath })}`);
                 continue;
             }
 
             if (!pathExistsSync(coursePath)) {
-                logger.error('path to course does not exist.', { path: coursePath });
+                console.error(`path to course does not exist. ${JSON.stringify({ path: coursePath })}`);
                 continue;
             }
 
             try {
-                logger.info('unzipping course', { course: coursePath });
+                log(`unzipping course: '${chalk.gray(coursePath)}'`);
                 await extract(coursePath, { dir: extractPath });
-                logger.info('finished unzipping course', { course: extractPath })
+                log(`finished unzipping course to: '${chalk.gray(extractPath)}'`);
                 extractedCourses.push(extractPath);
             } catch (error) {
-                logger.error('error while trying to unzip course', error);
+                console.error(`error while trying to unzip course`, error);
             }
         }
         return extractedCourses;

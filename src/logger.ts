@@ -1,5 +1,6 @@
 
 import { createLogger, transports, format } from "winston";
+import * as chalk from "chalk";
 
 const logger = createLogger({
     transports: [new transports.Console()],
@@ -15,5 +16,8 @@ const logger = createLogger({
     )
 });
 
+export const log = (message: string) => {
+    console.log(chalk.bgCyan(chalk.black('heathers-course-modifier:')) + ' ' + message);
+}
 
 export default logger;
