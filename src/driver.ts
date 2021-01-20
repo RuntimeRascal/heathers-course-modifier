@@ -6,6 +6,7 @@ import { parse, print } from "recast";
 import { completeOutCodeMod, currentTimeArrayCodeMod, exitFunctionCodeMod, finishFunctionCodeMod, isTimeCompletedCodeMod, rootCodeMod } from './indexScriptTagCodeMods';
 import { log } from './logger';
 import { ISettings } from './cli';
+import * as moment from 'moment';
 
 export class Driver {
     dom: JSDOM;
@@ -52,13 +53,26 @@ export class Driver {
         }
     }
 
-    insertCustomCodeScriptInIndexHtml = async (contentDirPath: string, libDirPath: string) => {
+    insertCustomCodeScriptInIndexHtml = async (settings: ISettings, contentDirPath: string, libDirPath: string) => {
         if (!this.dom) return;
 
         let fromFilePath = join(contentDirPath, 'custom-index-code.js');
         let toFilePath = join(libDirPath, 'custom-index-code.js');
 
         let fileContents = await readFile(fromFilePath, 'utf8');
+
+        fileContents = `var idleTimer;
+var idleTime = ${settings.idleTime}; // Add your timer time in millisecond
+var countDownTimer;
+var countDownTime = ${settings.countDownTime}; // Add your warning time in second
+var isFromCountDown = false;
+var courseTimer;
+var courseCurrentTime = 0;
+var courseTotalTime = ${settings.courseTotalTime}; // Add your course duration time in second
+var isTimeCompleted = false; 
+
+        ` + fileContents;
+
         await writeFile(toFilePath, fileContents, { encoding: 'utf8', flag: 'w' });
 
         let script = this.dom.window.document.createElement('script');
@@ -80,23 +94,27 @@ export class Driver {
         }
     }
 
-    insertPopupsMarkupInIndexHtml = async (filePath: string) => {
+    insertPopupsMarkupInIndexHtml = async (settings: ISettings, filePath: string) => {
         if (!this.dom.window.document.getElementById('idleDiv')) {
             let fileContents = await readFile(filePath, 'utf8');
             let popupsContentFragment = JSDOM.fragment(fileContents);
-            //TODO: update the time text
+
+            let tpcd = popupsContentFragment.getElementById('timerPopupCountDown');
+            tpcd.innerHTML = `${settings.countDownTime}`;
+            popupsContentFragment.getElementById('timer-popup-text-warning-time').innerHTML = `${settings.countDownTime}`;
+            popupsContentFragment.getElementById('warning-popup-text-course-time').innerHTML = `${moment.duration(settings.courseTotalTime, 'seconds').humanize()}`;
 
             let appElement = this.dom.window.document.getElementById('app');
             appElement.parentNode.insertBefore(popupsContentFragment, appElement);
         }
     }
 
-    insertBodyTagEventHandlers = () => {
+    insertBodyTagEventHandlers = (settings: ISettings) => {
         let body = this.dom.window.document.getElementsByTagName('body')[0];
         if (!body.getAttribute('onkeydown'))
-            body.setAttribute('onkeydown', 'fnResetIdleTime(600);');
+            body.setAttribute('onkeydown', `fnResetIdleTime(${settings.idleTime});`);
         if (!body.getAttribute('onmousedown'))
-            body.setAttribute('onmousedown', 'fnResetIdleTime(600);');
+            body.setAttribute('onmousedown', `fnResetIdleTime(${settings.idleTime});`);
         if (!body.getAttribute('onload'))
             body.setAttribute('onload', 'fnOnPageLoad();');
     }
@@ -141,10 +159,10 @@ export const modifyCourse = async (settings: ISettings) => {
 
     await driver.loadIndexHtml(indexFilePath);
 
-    driver.insertBodyTagEventHandlers();
-    await driver.insertPopupsMarkupInIndexHtml(join(contentDirPath, 'popups.html'));
+    driver.insertBodyTagEventHandlers(settings);
+    await driver.insertPopupsMarkupInIndexHtml(settings, join(contentDirPath, 'popups.html'));
     await driver.insertCustomIndexStyle(join(contentDirPath, 'custom-index-styles.css'), join(libDirPath, 'custom-index-styles.css'));
-    await driver.insertCustomCodeScriptInIndexHtml(contentDirPath, libDirPath);
+    await driver.insertCustomCodeScriptInIndexHtml(settings, contentDirPath, libDirPath);
     await driver.applyIndexHtmlScriptTagCodeMods(contentDirPath);
 
     await driver.saveIndexHtml(indexFilePath);

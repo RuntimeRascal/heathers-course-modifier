@@ -3,16 +3,9 @@ var courseDetails, courseTotalprogress;
 var ua = navigator.userAgent;
 var event = (ua.match(/iPad/i) || ua.match(/iPhone/i) || ua.match(/Android/i)) ? "touchstart" : "click";
 
-document.body.addEventListener(event, function(e) {fnResetIdleTime(10);});
-var idleTimer;
-var idleTime = 300000; // Add your timer time in millisecond
-var countDownTimer;
-var countDownTime = 600; // Add your warning time in second
-var isFromCountDown = false;
-var courseTimer;
-var courseCurrentTime = 0;
-var courseTotalTime = 8400; // Add your course duration time in second
-var isTimeCompleted = false;
+document.body.addEventListener(event, function(e) {
+    fnResetIdleTime(10);
+});
 
 function fnOnPageLoad() {
     fnClearCourseTimer();
@@ -32,7 +25,7 @@ function fnCheckCourseTime() {
 function fnCalcCourseTotalTime() {
     courseCurrentTime++;
     fnUpdateTime();
-    if(courseCurrentTime >= courseTotalTime) {
+    if (courseCurrentTime >= courseTotalTime) {
         isTimeCompleted = true;
         fnClearCourseTimer();
         courseDetails.Runtime.finish(courseTotalprogress);
@@ -77,11 +70,11 @@ function fnShowIdelPopup() {
 function fnStartCountDown() {
     countDownTime--;
     var tempCount = countDownTime;
-    if(tempCount < 10) {
+    if (tempCount < 10) {
         tempCount = "0" + tempCount;
     }
     document.getElementById('timerPopupCountDown').innerHTML = tempCount;
-    if(countDownTime == 0) {
+    if (countDownTime == 0) {
         fnClearCountDownTimer();
         fnClose();
     }
@@ -115,4 +108,3 @@ function fnClearIdleTimer() {
 function fnClearCountDownTimer() {
     clearInterval(countDownTimer);
 }
-

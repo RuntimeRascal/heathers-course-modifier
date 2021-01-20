@@ -30,19 +30,19 @@ const getArgs = async () => {
         {
             type: 'number',
             name: 'idleTime',
-            message: `specify course idle time (milliseconds)?`,
+            message: `specify course idle time in ${chalk.bgYellow.black('milliseconds')}?`,
             default: process.env.DEFAULT_IDLE_TIME && process.env.DEFAULT_IDLE_TIME != '' ? +process.env.DEFAULT_IDLE_TIME : 300000
         },
         {
             type: 'number',
             name: 'countDownTime',
-            message: `specify course count down time (seconds)?`,
+            message: `specify course count down time in ${chalk.bgYellow.black('seconds')}?`,
             default: process.env.DEFAULT_COUNTDOWN_TIME && process.env.DEFAULT_COUNTDOWN_TIME != '' ? +process.env.DEFAULT_COUNTDOWN_TIME : 600
         },
         {
             type: 'number',
             name: 'courseTotalTime',
-            message: `specify course duration time (seconds)?`,
+            message: `specify course duration time in ${chalk.bgYellow.black('seconds')}?`,
             default: process.env.DEFAULT_COURSE_TOTAL_TIME && process.env.DEFAULT_COURSE_TOTAL_TIME != '' ? +process.env.DEFAULT_COURSE_TOTAL_TIME : 600
         },
         {
@@ -78,14 +78,25 @@ const getArgs = async () => {
 }
 
 const run = async () => {
+    // let settings: ISettings = {
+    //     countDownTime: 600, courseTotalTime: 600, idleTime: 600000,
+    //     course: 'writing-good-contracts-3-hours-scorm12-jkMEYrg-',
+    //     paths: {
+    //         coursesDirectory: 'C:\\source\\heathers-course-modifier\\courses',
+    //         workingDirectory: 'C:\\source\\heathers-course-modifier\\working',
+    //         modifiedDirectory: 'C:\\source\\heathers-course-modifier\\modified-courses',
+    //         originalCourse: 'C:\\source\\heathers-course-modifier\\courses\\writing-good-contracts-3-hours-scorm12-jkMEYrg-.zip',
+    //         extractedCourse: 'C:\\source\\heathers-course-modifier\\working\\writing-good-contracts-3-hours-scorm12-jkMEYrg-',
+    //         modifiedCourse: 'C:\\source\\heathers-course-modifier\\modified-courses\\writing-good-contracts-3-hours-scorm12-jkMEYrg-.zip',
+    //     }
+    // }
     let settings = await getArgs();
 
     await DiskHelper.extractSelectedCourse(settings);
 
     await modifyCourse(settings);
-    //await modifyCourse('C:\\source\\heathers-course-modifier\\working\\writing-good-contracts-3-hours-scorm12-jkMEYrg-');
 
-    await DiskHelper.archiveSelectedCourse(settings);
+    //await DiskHelper.archiveSelectedCourse(settings);
 }
 
 run().then(() => {
