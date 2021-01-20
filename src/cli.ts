@@ -11,9 +11,22 @@ config();
 
 log('starting...');
 
+export interface ISettings {
+    idleTime: number; countDownTime: number; courseTotalTime: number; course: string;
+    paths?: {
+        extractedCourse?: string,
+        modifiedCourse?: string,
+        originalCourse?: string
+        coursesDirectory?: string
+        workingDirectory?: string
+        modifiedDirectory?: string
+    }
+}
+
+
 const getArgs = async () => {
-    let allCourses = await DiskHelper.getCourses();
-    let answers: { idleTime: number, countDownTime: number, courseTotalTime: number, course: string } = await prompt([
+    let { courses, coursesDirectory } = await DiskHelper.getCourses();
+    let answers = await prompt([
         {
             type: 'number',
             name: 'idleTime',
@@ -36,7 +49,7 @@ const getArgs = async () => {
             type: 'list',
             name: 'course',
             message: `choose a course to modify?`,
-            choices: allCourses,
+            choices: courses,
         }
     ]).catch(error => {
         if (error.isTtyError) {
@@ -45,26 +58,36 @@ const getArgs = async () => {
             // Something else when wrong
         }
 
-        //logger.error(error);
+        console.error(error);
     });
+
+    let settings: ISettings = {
+        ...answers, paths: {
+            extractedCourse: '',
+            modifiedCourse: '',
+            originalCourse: '',
+            coursesDirectory: coursesDirectory,
+            modifiedDirectory: '',
+            workingDirectory: ''
+        }
+    }
 
     log(`You entered the following: ${chalk.gray(JSON.stringify(answers))}`);
 
-    return answers;
+    return settings;
 }
 
 const run = async () => {
-    // await DiskHelper.ensureWorkingDirectory();
+    let settings = await getArgs();
 
-    let course = await getArgs();
+    await DiskHelper.extractSelectedCourse(settings);
 
-    // let extractedCourses = await DiskHelper.extractSelectedCourses([course]);
+    await modifyCourse(settings);
+    //await modifyCourse('C:\\source\\heathers-course-modifier\\working\\writing-good-contracts-3-hours-scorm12-jkMEYrg-');
 
-    // await modifyCourse(extractedCourses[0]);
-
-    // await modifyCourse('C:\\source\\heathers-course-modifier\\working\\writing-good-contracts-3-hours-scorm12-jkMEYrg-');
+    await DiskHelper.archiveSelectedCourse(settings);
 }
 
 run().then(() => {
-    log(`finished`);
+    log(`Script Complete. Exiting!`);
 });

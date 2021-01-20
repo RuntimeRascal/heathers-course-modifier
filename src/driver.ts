@@ -2,8 +2,10 @@
 import { JSDOM } from "jsdom";
 import { readFile, writeFile } from "fs-extra";
 import { join, basename } from "path";
-import { types, parse, print, visit } from "recast";
+import { parse, print } from "recast";
 import { completeOutCodeMod, currentTimeArrayCodeMod, exitFunctionCodeMod, finishFunctionCodeMod, isTimeCompletedCodeMod, rootCodeMod } from './indexScriptTagCodeMods';
+import { log } from './logger';
+import { ISettings } from './cli';
 
 export class Driver {
     dom: JSDOM;
@@ -126,15 +128,16 @@ export class Driver {
         await rootCodeMod(scriptTag.innerHTML, ast, contentPath);
 
         scriptTag.innerHTML = print(ast, { quote: 'single' }).code;
-        console.log(print(ast, { quote: 'single' }).code);
+        //console.log(print(ast, { quote: 'single' }).code);
     }
 }
 
-export const modifyCourse = async (coursePath: string) => {
+export const modifyCourse = async (settings: ISettings) => {
+    log('applying code mods');
     const driver = new Driver();
-    const indexFilePath = join(coursePath, 'scormcontent', 'index.html');
-    const contentDirPath = join(coursePath, '../../', 'content');
-    const libDirPath = join(coursePath, 'scormcontent', 'lib');
+    const indexFilePath = join(settings.paths.extractedCourse, 'scormcontent', 'index.html');
+    const contentDirPath = join(settings.paths.extractedCourse, '../../', 'content');
+    const libDirPath = join(settings.paths.extractedCourse, 'scormcontent', 'lib');
 
     await driver.loadIndexHtml(indexFilePath);
 
