@@ -3,20 +3,23 @@ import { JSDOM } from "jsdom";
 import { readFile, writeFile } from "fs-extra";
 import { join, basename } from "path";
 import { parse, print } from "recast";
-import { completeOutCodeMod, currentTimeArrayCodeMod, exitFunctionCodeMod, finishFunctionCodeMod, isTimeCompletedCodeMod, rootCodeMod } from './indexScriptTagCodeMods';
-import { log } from './logger';
+import { completeOutCodeMod, currentTimeArrayCodeMod, exitFunctionCodeMod, finishFunctionCodeMod, isTimeCompletedCodeMod, loadContentCodeMod, rootCodeMod } from './indexScriptTagCodeMods';
+import { logInfo, logMod } from './logger';
 import { ISettings } from './cli';
 import * as moment from 'moment';
+import { scorm2004GetCourseCurrentTimeFuncCodeMod, aiccGetCourseCurrentTimeFuncCodeMod, scormGetCourseCurrentTimeFuncCodeMod, noneGetCourseCurrentTimeFuncCodeMod, tcapiGetCourseCurrentTimeFuncCodeMod, cmi5GetCourseCurrentTimeFuncCodeMod, getCourseCurrentTimeFuncCodeMod, concedeControlCodeMod, lmsStandardApiFuncCodeMod } from './scormDriverCodeMods';
 
 export class Driver {
     dom: JSDOM;
 
-    loadIndexHtml = async (filePath: string) => {
+    loadHtmlFile = async (filePath: string) => {
+        logInfo(`reading '${filePath}' file`);
         let fileContents = await readFile(filePath, 'utf8');
         this.dom = new JSDOM(fileContents);
     }
 
-    saveIndexHtml = async (filePath: string) => {
+    saveHtmlFile = async (filePath: string) => {
+        logInfo(`persisting '${filePath}' file`);
         let contents = this.dom.serialize();
         await writeFile(filePath, contents, { encoding: 'utf8', flag: 'w' });
     }
@@ -27,6 +30,8 @@ export class Driver {
     }
 
     insertCustomIndexStyle = async (filePath: string, toFilePath: string) => {
+        logMod('insertCustomIndexStyle');
+
         if (!this.dom) return;
 
         let fileContents = await readFile(filePath, 'utf8');
@@ -54,6 +59,8 @@ export class Driver {
     }
 
     insertCustomCodeScriptInIndexHtml = async (settings: ISettings, contentDirPath: string, libDirPath: string) => {
+        logMod('insertCustomCodeScriptInIndexHtml');
+
         if (!this.dom) return;
 
         let fromFilePath = join(contentDirPath, 'custom-index-code.js');
@@ -95,6 +102,7 @@ var isTimeCompleted = false;
     }
 
     insertPopupsMarkupInIndexHtml = async (settings: ISettings, filePath: string) => {
+        logMod('insertPopupsMarkupInIndexHtml');
         if (!this.dom.window.document.getElementById('idleDiv')) {
             let fileContents = await readFile(filePath, 'utf8');
             let popupsContentFragment = JSDOM.fragment(fileContents);
@@ -110,6 +118,8 @@ var isTimeCompleted = false;
     }
 
     insertBodyTagEventHandlers = (settings: ISettings) => {
+        logMod('insertBodyTagEventHandlers');
+
         let body = this.dom.window.document.getElementsByTagName('body')[0];
         if (!body.getAttribute('onkeydown'))
             body.setAttribute('onkeydown', `fnResetIdleTime(${settings.idleTime});`);
@@ -133,7 +143,23 @@ var isTimeCompleted = false;
         return scriptTag;
     }
 
+    getIndexAPIHtmlScriptTag = () => {
+        let body = this.dom.window.document.getElementsByTagName('head')[0];
+        let scripts = body.getElementsByTagName('script');
+        let scriptTag = null;
+        for (let index = 0; index < scripts.length; index++) {
+            const script = scripts[index];
+            if (!script.type && !script.src && script.getAttribute('language')) {
+                scriptTag = script;
+                break;
+            }
+        }
+        return scriptTag;
+    }
+
     applyIndexHtmlScriptTagCodeMods = async (contentPath: string) => {
+        logMod('applyIndexHtmlScriptTagCodeMods');
+
         let scriptTag = this.getIndexHtmlScriptTag();
 
         const ast = parse(scriptTag.innerHTML, { quote: 'single' });
@@ -146,24 +172,66 @@ var isTimeCompleted = false;
         await rootCodeMod(scriptTag.innerHTML, ast, contentPath);
 
         scriptTag.innerHTML = print(ast, { quote: 'single' }).code;
-        //console.log(print(ast, { quote: 'single' }).code);
+    }
+
+    applyIndexAPIHtmlScriptTagCodeMods = async (contentPath: string) => {
+        logMod('applyIndexAPIHtmlScriptTagCodeMods');
+
+        let scriptTag = this.getIndexAPIHtmlScriptTag();
+
+        // add getCourseCurrentTimeLMS variable
+        scriptTag.innerHTML = `    var getCourseCurrentTimeLMS = ''; // Custom code added` + scriptTag.innerHTML;
+        const ast = parse(scriptTag.innerHTML, { quote: 'single' });
+
+        await loadContentCodeMod(scriptTag.innerHTML, ast, contentPath);
+
+        scriptTag.innerHTML = print(ast, { quote: 'single' }).code;
+    }
+
+    applyScormDriverCodeMods = async (filePath, contentPath: string) => {
+        logInfo(`reading '${filePath}' file`);
+
+        let fileContents = await readFile(filePath, 'utf8');
+
+        const ast = parse(fileContents, { quote: 'single' });
+
+        await scorm2004GetCourseCurrentTimeFuncCodeMod(fileContents, ast, contentPath);
+        await scormGetCourseCurrentTimeFuncCodeMod(fileContents, ast, contentPath);
+        await aiccGetCourseCurrentTimeFuncCodeMod(fileContents, ast, contentPath);
+        await noneGetCourseCurrentTimeFuncCodeMod(fileContents, ast, contentPath);
+        await tcapiGetCourseCurrentTimeFuncCodeMod(fileContents, ast, contentPath);
+        await cmi5GetCourseCurrentTimeFuncCodeMod(fileContents, ast, contentPath);
+        await lmsStandardApiFuncCodeMod(fileContents, ast, contentPath);
+        await getCourseCurrentTimeFuncCodeMod(fileContents, ast, contentPath);
+        await concedeControlCodeMod(fileContents, ast, contentPath)
+
+        let parsedCode = print(ast, { quote: 'single' }).code;
+
+        logInfo(`persisting '${filePath}' file`);
+        await writeFile(filePath, parsedCode, { encoding: 'utf8', flag: 'w' });
     }
 }
 
 export const modifyCourse = async (settings: ISettings) => {
-    log('applying code mods');
+    logInfo('applying code mods');
     const driver = new Driver();
     const indexFilePath = join(settings.paths.extractedCourse, 'scormcontent', 'index.html');
     const contentDirPath = join(settings.paths.extractedCourse, '../../', 'content');
     const libDirPath = join(settings.paths.extractedCourse, 'scormcontent', 'lib');
 
-    await driver.loadIndexHtml(indexFilePath);
-
+    await driver.loadHtmlFile(indexFilePath);
     driver.insertBodyTagEventHandlers(settings);
     await driver.insertPopupsMarkupInIndexHtml(settings, join(contentDirPath, 'popups.html'));
     await driver.insertCustomIndexStyle(join(contentDirPath, 'custom-index-styles.css'), join(libDirPath, 'custom-index-styles.css'));
     await driver.insertCustomCodeScriptInIndexHtml(settings, contentDirPath, libDirPath);
     await driver.applyIndexHtmlScriptTagCodeMods(contentDirPath);
+    await driver.saveHtmlFile(indexFilePath);
 
-    await driver.saveIndexHtml(indexFilePath);
+    const indexAPIFilePath = join(settings.paths.extractedCourse, 'scormdriver', 'indexAPI.html');
+    await driver.loadHtmlFile(indexAPIFilePath);
+    await driver.applyIndexAPIHtmlScriptTagCodeMods(contentDirPath);
+    await driver.saveHtmlFile(indexAPIFilePath);
+
+    const scormDriverFilePath = join(settings.paths.extractedCourse, 'scormdriver', 'scormdriver.js');
+    await driver.applyScormDriverCodeMods(scormDriverFilePath, contentDirPath);
 }

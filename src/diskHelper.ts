@@ -1,5 +1,5 @@
 import { readdir, ensureDir, emptyDir, pathExistsSync } from "fs-extra";
-import { log } from "./logger";
+import { logInfo } from "./logger";
 import * as extract from "extract-zip";
 import { join } from "path";
 import * as chalk from "chalk";
@@ -21,7 +21,7 @@ export class DiskHelper {
         let path = join(__dirname, '..\\', 'working');
         await ensureDir(path);
         await emptyDir(path);
-        log(`ensured '${chalk.gray(path)}' exists`);
+        logInfo(`ensured '${chalk.gray(path)}' exists`);
         settings.paths.workingDirectory = path;
     };
 
@@ -32,7 +32,7 @@ export class DiskHelper {
         }
         await ensureDir(path);
         await emptyDir(path);
-        log(`ensured '${chalk.gray(path)}' exists`);
+        logInfo(`ensured '${chalk.gray(path)}' exists`);
         settings.paths.modifiedDirectory = path;
 
     };
@@ -55,9 +55,9 @@ export class DiskHelper {
         }
 
         try {
-            log(`unzipping course: '${chalk.gray(settings.paths.originalCourse)}'`);
+            logInfo(`unzipping course: '${chalk.gray(settings.paths.originalCourse)}'`);
             await extract(settings.paths.originalCourse, { dir: settings.paths.extractedCourse });
-            log(`finished unzipping course to: '${chalk.gray(settings.paths.extractedCourse)}'`);
+            logInfo(`finished unzipping course to: '${chalk.gray(settings.paths.extractedCourse)}'`);
         } catch (error) {
             console.error(`error while trying to unzip course`, error);
         }
@@ -66,11 +66,11 @@ export class DiskHelper {
     static archiveSelectedCourse = async (settings: ISettings) => {
         await DiskHelper.ensureModifiedCoursesDirectory(settings);
         settings.paths.modifiedCourse = join(settings.paths.modifiedDirectory, settings.course);
-        log(`archiving modified course: '${chalk.gray(settings.paths.modifiedCourse)}'`);
+        logInfo(`archiving modified course: '${chalk.gray(settings.paths.modifiedCourse)}'`);
 
         return new Promise<void>((resolve) => {
             zipdir(settings.paths.extractedCourse, { saveTo: settings.paths.modifiedCourse }, function (err, buffer) {
-                log(`finished archiving modified course: '${chalk.gray(settings.paths.modifiedCourse)}'`);
+                logInfo(`finished archiving modified course: '${chalk.gray(settings.paths.modifiedCourse)}'`);
                 resolve();
             });
         });

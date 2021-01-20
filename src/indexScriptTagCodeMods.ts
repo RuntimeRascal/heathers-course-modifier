@@ -1,9 +1,12 @@
 import { readFile } from "fs-extra";
 import { join } from "path";
 import { types, parse, visit } from "recast";
+import { logMod } from './logger';
 
-
+/* appends code at end of a call expressions func/block  */
 export const rootCodeMod = async (startingCode: string, ast: any, contentPath: string) => {
+    logMod('rootCodeMod');
+
     if (startingCode.includes('start root codemod')) return;
 
     let code = await readFile(join(contentPath, 'root-codemod.js'), 'utf8');
@@ -20,7 +23,10 @@ export const rootCodeMod = async (startingCode: string, ast: any, contentPath: s
     });
 }
 
+/* appends a statement block at end of function  */
 export const finishFunctionCodeMod = async (startingCode: string, ast: any, contentPath: string) => {
+    logMod('finishFunctionCodeMod');
+
     if (startingCode.includes('start finish function codemod')) return;
 
     let code = await readFile(join(contentPath, 'finishFunction-codemod.js'), 'utf8');
@@ -41,7 +47,10 @@ export const finishFunctionCodeMod = async (startingCode: string, ast: any, cont
     });
 }
 
+/* appends a element to an array declaration  */
 export const currentTimeArrayCodeMod = (startingCode: string, ast: any) => {
+    logMod('currentTimeArrayCodeMod');
+
     visit(ast, {
         visitVariableDeclarator: function (path) {
             if (path.value && path.value.id.name === 'stuffToPick' && path.value.init.elements.length === 16) {
@@ -55,7 +64,10 @@ export const currentTimeArrayCodeMod = (startingCode: string, ast: any) => {
     });
 }
 
+/* inserts code before a function call   */
 export const isTimeCompletedCodeMod = async (startingCode: string, ast: any, contentPath: string) => {
+    logMod('isTimeCompletedCodeMod');
+
     if (startingCode.includes('start isTimeCompleted codemod')) return;
 
     let code = await readFile(join(contentPath, 'isTimeCompleted-codemod.js'), 'utf8');
@@ -74,7 +86,10 @@ export const isTimeCompletedCodeMod = async (startingCode: string, ast: any, con
     });
 }
 
+/* inserts code before if statement within a function body   */
 export const completeOutCodeMod = async (startingCode: string, ast: any, contentPath: string) => {
+    logMod('completeOutCodeMod');
+
     if (startingCode.includes('start completeOut function codemod')) return;
 
     let code = await readFile(join(contentPath, 'completeOutFunction-codemod.js'), 'utf8');
@@ -97,7 +112,10 @@ export const completeOutCodeMod = async (startingCode: string, ast: any, content
     });
 }
 
+/* overwrites a functions body or block  */
 export const exitFunctionCodeMod = async (startingCode: string, ast: any, contentPath: string) => {
+    logMod('exitFunctionCodeMod');
+
     if (startingCode.includes('start exit function codemod')) return;
 
     let code = await readFile(join(contentPath, 'exitFunction-codemod.js'), 'utf8');
@@ -105,6 +123,27 @@ export const exitFunctionCodeMod = async (startingCode: string, ast: any, conten
     visit(ast, {
         visitFunctionDeclaration: function (path) {
             if (path.value && path.value.id && path.value.id.name && path.value.id.name === 'exit') {
+                let blocks = parse(code, { quote: 'single' }).program.body;
+                let block = types.builders.blockStatement(blocks);
+                path.value.body = block;
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+}
+
+/* overwrites a functions body or block  */
+export const loadContentCodeMod = async (startingCode: string, ast: any, contentPath: string) => {
+    logMod('loadContentCodeMod');
+
+    if (startingCode.includes('start loadContent codemod')) return;
+
+    let code = await readFile(join(contentPath, 'loadContent-codemod.js'), 'utf8');
+
+    visit(ast, {
+        visitFunctionDeclaration: function (path) {
+            if (path.value && path.value.id && path.value.id.name && path.value.id.name === 'LoadContent') {
                 let blocks = parse(code, { quote: 'single' }).program.body;
                 let block = types.builders.blockStatement(blocks);
                 path.value.body = block;

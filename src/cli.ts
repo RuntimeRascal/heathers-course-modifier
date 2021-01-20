@@ -1,15 +1,14 @@
 #! /usr/bin/env node
 
 import * as chalk from "chalk";
-import { log } from "./logger";
+import { logImp, logInfo } from "./logger";
 import { DiskHelper } from './diskHelper';
 import { prompt } from "inquirer";
 import { modifyCourse } from './driver';
 import { config } from "dotenv";
 
 config();
-
-log('starting...');
+logImp('Script Starting!');
 
 export interface ISettings {
     idleTime: number; countDownTime: number; courseTotalTime: number; course: string;
@@ -22,7 +21,6 @@ export interface ISettings {
         modifiedDirectory?: string
     }
 }
-
 
 const getArgs = async () => {
     let { courses, coursesDirectory } = await DiskHelper.getCourses();
@@ -72,33 +70,20 @@ const getArgs = async () => {
         }
     }
 
-    log(`You entered the following: ${chalk.gray(JSON.stringify(answers))}`);
+    console.log('');
+    logInfo(`You entered the following: ${chalk.gray(JSON.stringify(answers))}`);
 
     return settings;
 }
 
 const run = async () => {
-    // let settings: ISettings = {
-    //     countDownTime: 600, courseTotalTime: 600, idleTime: 600000,
-    //     course: 'writing-good-contracts-3-hours-scorm12-jkMEYrg-',
-    //     paths: {
-    //         coursesDirectory: 'C:\\source\\heathers-course-modifier\\courses',
-    //         workingDirectory: 'C:\\source\\heathers-course-modifier\\working',
-    //         modifiedDirectory: 'C:\\source\\heathers-course-modifier\\modified-courses',
-    //         originalCourse: 'C:\\source\\heathers-course-modifier\\courses\\writing-good-contracts-3-hours-scorm12-jkMEYrg-.zip',
-    //         extractedCourse: 'C:\\source\\heathers-course-modifier\\working\\writing-good-contracts-3-hours-scorm12-jkMEYrg-',
-    //         modifiedCourse: 'C:\\source\\heathers-course-modifier\\modified-courses\\writing-good-contracts-3-hours-scorm12-jkMEYrg-.zip',
-    //     }
-    // }
     let settings = await getArgs();
 
     await DiskHelper.extractSelectedCourse(settings);
-
     await modifyCourse(settings);
-
-    //await DiskHelper.archiveSelectedCourse(settings);
+    await DiskHelper.archiveSelectedCourse(settings);
 }
 
 run().then(() => {
-    log(`Script Complete. Exiting!`);
+    logImp(' Script Complete. Exiting!');
 });

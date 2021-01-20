@@ -6,6 +6,7 @@ Using the cli
 - clone the source code by executing `git clone https://github.com/simpert/heathers-course-modifier.git`  
 - open the repo in [VS Code](https://code.visualstudio.com/#)
 - install the packages by executing `npm install`
+- build the javascript by executing `npm run build`
 - create a file called `.env` in the repos folder root (same folder as the `package.json` file) and place the defaults you would like to use in the file
     ``` shell
     COURSE_DIR_PATH=C:\my-courses-directory
@@ -46,17 +47,32 @@ This script does the following *(not an exhaustive list)*
     - inserts `<script>` tag which points to [custom javascript code](./content/custom-index-code.js)
     - inserts `<style>` tag which points to [styles css file](./content/custom-index-styles.css)
     - gets contents of existing `<script>` tag and applies following code mods
-        - sdf
+        - currentTimeArrayCodeMod
+        - isTimeCompletedCodeMod
+        - completeOutCodeMod
+        - exitFunctionCodeMod
+        - finishFunctionCodeMod
+        - rootCodeMod
 
 6. Persist the manipulated `scormcontents/index.html` file
 
-7. Reads contents of course `scormdriver/indexAPI.html` file for manipulations
-    - a
+7. Reads contents of course `scormdriver/indexAPI.html` file and parses into a `JSDOM` instance for manipulations
+    - gets contents of existing `<script>` tag and applies following code mods
+        - declare variable `getCourseCurrentTimeLMS` at begining of script
+        - replace `LoadContent` function declaration block body
 
 8. Persist the manipulated `scormdriver/indexAPI.html` file
 
 9. Reads contents of course `scormdriver/scormdriver.js` file and apply following code mods
-    - a
+    - scorm2004GetCourseCurrentTimeFuncCodeMod
+    - scormGetCourseCurrentTimeFuncCodeMod
+    - aiccGetCourseCurrentTimeFuncCodeMod
+    - noneGetCourseCurrentTimeFuncCodeMod
+    - tcapiGetCourseCurrentTimeFuncCodeMod
+    - cmi5GetCourseCurrentTimeFuncCodeMod
+    - lmsStandardApiFuncCodeMod
+    - getCourseCurrentTimeFuncCodeMod
+    - concedeControlCodeMod
 
 10. Persist the manipulated `scormdriver/scormdriver.js` file
 
