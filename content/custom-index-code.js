@@ -1,11 +1,28 @@
-        var courseDetails, courseTotalprogress;
+        var isFromCountDown = false;
+        var courseCurrentTime = 0;
+        var isTimeCompleted = false;
+
+        var courseDetails, courseTotalprogress, idleTimer, countDownTimer, courseTimer;
 
         var ua = navigator.userAgent;
         var event = (ua.match(/iPad/i) || ua.match(/iPhone/i) || ua.match(/Android/i)) ? "touchstart" : "click";
 
         document.body.addEventListener(event, function(e) {
-            fnResetIdleTime(10);
+            fnResetIdleTime(countDownTime);
         });
+
+        window.onload = function() {
+            fnOnPageLoad();
+
+            var body = document.getElementsByTagName('body')[0];
+            body.addEventListener('keydown', function(e) {
+                fnResetIdleTime(countDownTime);
+            });
+
+            body.addEventListener('mousedown', function(e) {
+                fnResetIdleTime(countDownTime);
+            });
+        }
 
         function fnOnPageLoad() {
             fnClearCourseTimer();
@@ -17,6 +34,7 @@
         }
 
         function fnCheckCourseTime() {
+            console.log('initializing course timer');
             fnClearCourseTimer();
             courseTimer = setInterval(fnCalcCourseTotalTime, 1000);
         }
@@ -33,18 +51,24 @@
         }
 
         function fnUpdateTime() {
-            var hh = Math.floor(courseCurrentTime / 3600);
-            var mm = Math.floor(courseCurrentTime % 3600 / 60);
-            var ss = Math.floor(courseCurrentTime % 3600 % 60);
+            document.getElementById('popup-text-total-time-left').innerHTML = humanizeDuration(courseCurrentTime * 1000, {
+                delimiter: ' ',
+                spacer: ' '
+            });
+        }
 
-            document.querySelector("#warningPopup #hoursLeft").innerHTML = hh;
-            document.querySelector("#warningPopup #minutesLeft").innerHTML = mm;
-            document.querySelector("#warningPopup #secondsLeft").innerHTML = ss;
+        function fnUpdateTotalTime() {
+            document.getElementById('warning-popup-text-course-time').innerHTML = humanizeDuration(courseTotalTime * 1000, {
+                delimiter: ' ',
+                spacer: ' '
+            });
         }
 
         function fnShowWarningPopup() {
             fnClearCourseTimer();
             fnClearIdleTimer();
+            fnUpdateTime();
+            fnUpdateTotalTime();
             document.getElementById('warningDiv').style.display = 'block';
         }
 
@@ -67,13 +91,20 @@
             countDownTimer = setInterval(fnStartCountDown, 1000);
         }
 
+        function fnSetTimerPopupCountDown(value) {
+            document.getElementById('timerPopupCountDown').innerHTML = humanizeDuration(value * 1000, {
+                delimiter: ' ',
+                spacer: ' '
+            });
+        }
+
         function fnStartCountDown() {
             countDownTime--;
             var tempCount = countDownTime;
             if (tempCount < 10) {
                 tempCount = "0" + tempCount;
             }
-            document.getElementById('timerPopupCountDown').innerHTML = tempCount;
+            fnSetTimerPopupCountDown(tempCount);
             if (countDownTime == 0) {
                 fnClearCountDownTimer();
                 fnClose();
@@ -84,7 +115,7 @@
             fnCheckIdleTime();
             document.getElementById('idleDiv').style.display = 'none';
             countDownTime = tempTime;
-            document.getElementById('timerPopupCountDown').innerHTML = countDownTime;
+            fnSetTimerPopupCountDown(countDownTime);
         }
 
         function fnGetCurrentCourseTime() {

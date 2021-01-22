@@ -1,65 +1,72 @@
-/* Start custom CSS for the idle timer and warning message */
-#idleDiv .popup {
-    position: relative;
-    width: 35%;
-    top: 20%;
-    background-color: #fff;
-    padding: 25px;
-    margin:
-        0 auto;
-    text-align: center;
-}
+        /* Start custom CSS for the idle timer and warning message */
+        #idleDiv .popup {
+            position: relative;
+            width: 35%;
+            top: 20%;
+            background-color: #d77f1c;
+            color: white;
+            padding: 25px;
+            margin:
+                0 auto;
+            text-align: center;
+        }
 
-#idleDiv .CountDownText {
-    margin: 10px;
-    font-size: 18px;
-}
+        #idleDiv .CountDownText {
+            margin: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            /* color: rgb(255, 91, 91); */
+        }
 
-#idleDiv .popup .ok-btn {
-    padding: 5px 15px;
-    background-color: blue;
-    display: inline-block;
-    color:
-        #fff;
-    cursor: pointer;
-}
+        #idleDiv .popup .ok-btn {
+            padding: 5px 15px;
+            background-color: #0D0D0E;
+            display: inline-block;
+            color:
+                #FFFFFF;
+            cursor: pointer;
+            min-width: 100px;
+        }
 
-#warningDiv .popup {
-    position: relative;
-    width: 35%;
-    top: 20%;
-    background-color: #fff;
-    padding:
-        25px;
-    margin: 0 auto;
-    text-align: center;
-}
+        #warningDiv .popup {
+            position: relative;
+            width: 35%;
+            top: 20%;
+            background-color: #d77f1c;
+            color: white;
+            padding:
+                25px;
+            margin: 0 auto;
+            text-align: center;
+        }
 
-#warningDiv .popup .btn-wrapper {
-    display: flex;
-    margin-top: 30px;
-    justify-content: space-around;
-}
+        #warningDiv .popup .btn-wrapper {
+            display: flex;
+            margin-top: 30px;
+            /* justify-content: space-around; */
+        }
 
-#warningDiv .popup .continue-btn,
-#warningDiv .popup .exit-btn {
-    padding: 5px 15px;
-    background-color: blue;
-    display: inline-block;
-    color: #fff;
-    cursor: pointer;
-}
+        #warningDiv .popup .continue-btn,
+        #warningDiv .popup .exit-btn {
+            padding: 5px 15px;
+            background-color: #0D0D0E;
+            display: inline-block;
+            color: #FFFFFF;
+            cursor: pointer;
+            flex-grow: 1;
+            margin: 5px;
+        }
 
-@media (max-width:767px) {
-    #idleDiv .popup {
-        width: 90%;
-        top: 20%;
-    }
+        @media (max-width:767px) {
+            #idleDiv .popup {
+                width: 90%;
+                top: 20%;
+            }
 
-    #warningDiv .popup {
-        width: 90%;
-        top: 20%;
-    }
-}
+            #warningDiv .popup {
+                width: 90%;
+                top: 20%;
+            }
+        }
 
-/* End custom CSS for the idle timer and warning message */
+        /* End custom CSS for the idle timer and warning message */

@@ -34,14 +34,62 @@ export class Driver {
 
         if (!this.dom) return;
 
+        // let styles = this.dom.window.document.getElementsByTagName('body')[0].getElementsByTagName('style');
+        // if (styles && styles.length > 0) {
+        //     let styleContent = styles[0].innerHTML;
+        //     if (!styleContent.includes('Start custom CSS for the idle timer and warning message')) {
+        //         let fileContents = await readFile(filePath, 'utf8');
+        //         styleContent = styleContent + fileContents;
+        //         styles[0].innerHTML = styleContent;
+        //     }
+        // }
+
+        let fileContents = await readFile(filePath, 'utf8');
+        await writeFile(toFilePath, fileContents, { encoding: 'utf8', flag: 'w' });
+
+        let css = this.dom.window.document.createElement('link');
+        css.type = `text/css`;
+        css.rel = `stylesheet`;
+        css.href = `lib/${basename(toFilePath)}`;
+        css.id = `${basename(filePath, '.css')}`;
+        css.setAttribute('itemprop', 'url');
+
+
         let styles = this.dom.window.document.getElementsByTagName('body')[0].getElementsByTagName('style');
         if (styles && styles.length > 0) {
-            let styleContent = styles[0].innerHTML;
-            if (!styleContent.includes('Start custom CSS for the idle timer and warning message')) {
-                let fileContents = await readFile(filePath, 'utf8');
-                styleContent = styleContent + fileContents;
-                styles[0].innerHTML = styleContent;
-            }
+            styles[0].parentNode.insertBefore(css, styles[0]);
+        }
+    }
+
+    insertHumanizerScript = async (settings: ISettings, contentDirPath: string, libDirPath: string) => {
+        logMod('insertHumanizerScript');
+
+        if (!this.dom) return;
+
+        let humanizerScriptName = 'humanize-duration.js';
+        let fromFilePath = join(contentDirPath, humanizerScriptName);
+        let toFilePath = join(libDirPath, humanizerScriptName);
+
+        let fileContents = await readFile(fromFilePath, 'utf8');
+
+        await writeFile(toFilePath, fileContents, { encoding: 'utf8', flag: 'w' });
+
+        let script = this.dom.window.document.createElement('script');
+        script.id = basename(fromFilePath, '.js');
+        script.src = `./lib/${humanizerScriptName}`;
+
+        let customScript = this.dom.window.document.getElementById(script.id);
+        if (!customScript) {
+            let scripts = this.dom.window.document.getElementsByTagName('head')[0].getElementsByTagName('script');
+
+            this.dom.window.document.getElementsByTagName('head')[0].append(script);
+            // for (let index = 0; index < scripts.length; index++) {
+            //     const s = scripts[index];
+            //     if (s.src === 'lib/lzwcompress.js') {
+            //         s.parentNode.append(script, s);
+            //         break;
+            //     }
+            // }
         }
     }
 
@@ -50,36 +98,63 @@ export class Driver {
 
         if (!this.dom) return;
 
-        let scripts = this.dom.window.document.getElementsByTagName('body')[0].getElementsByTagName('script');
-        let found = false;
-        for (let index = 0; index < scripts.length; index++) {
-            if (found) break;
-            const s = scripts[index];
-            if (!s.src || s.src === '') {
-                found = true;
-                if (s.innerHTML.includes('Start custom javascript for the idle timer and warning message')) break;
+        // let scripts = this.dom.window.document.getElementsByTagName('body')[0].getElementsByTagName('script');
+        // let found = false;
+        // for (let index = 0; index < scripts.length; index++) {
+        //     if (found) break;
+        //     const s = scripts[index];
+        //     if (!s.src || s.src === '') {
+        //         found = true;
+        //         if (s.innerHTML.includes('Start custom javascript for the idle timer and warning message')) break;
 
-                let fromFilePath = join(contentDirPath, 'custom-index-code.js');
-                let fileContents = await readFile(fromFilePath, 'utf8');
+        //         let fromFilePath = join(contentDirPath, 'custom-index-code.js');
+        //         let fileContents = await readFile(fromFilePath, 'utf8');
 
-                let customCode = [
-                    '',
-                    '        /* Start custom javascript for the idle timer and warning message */',
-                    '        var idleTimer;',
-                    `        var idleTime = ${settings.idleTime}; // Add your timer time in millisecond`,
-                    `        var countDownTimer;`,
-                    `        var countDownTime = ${settings.countDownTime}; // Add your warning time in second`,
-                    `        var isFromCountDown = false;`,
-                    `        var courseTimer;`,
-                    `        var courseCurrentTime = 0;`,
-                    `        var courseTotalTime = ${settings.courseTotalTime}; // Add your course duration time in second`,
-                    `        var isTimeCompleted = false; `,
-                    '',
-                    ''
-                ].join('\n')
+        //         let customCode = [
+        //             '',
+        //             '        /* Start custom javascript for the idle timer and warning message */',
+        //             `        var idleTime = ${settings.idleTime}; // Add your timer time in millisecond`,
+        //             `        var countDownTime = ${settings.countDownTime}; // Add your warning time in second`,
+        //             `        var courseTotalTime = ${settings.courseTotalTime}; // Add your course duration time in second`,
+        //             '',
+        //             ''
+        //         ].join('\n')
 
-                s.innerHTML = customCode + fileContents + '\n\n' + s.innerHTML;
-                break;
+        //         s.innerHTML = customCode + fileContents + '\n\n' + s.innerHTML;
+        //         break;
+        //     }
+        // }
+
+
+
+        let fromFilePath = join(contentDirPath, 'custom-index-code.js');
+        let fileContents = await readFile(fromFilePath, 'utf8');
+        let customCode = [
+            '',
+            '        /* Start custom javascript for the idle timer and warning message */',
+            `        var idleTime = ${settings.idleTime}; // Add your timer time in millisecond`,
+            `        var countDownTime = ${settings.countDownTime}; // Add your warning time in second`,
+            `        var courseTotalTime = ${settings.courseTotalTime}; // Add your course duration time in second`,
+            '',
+            ''
+        ].join('\n') + fileContents;
+
+        let toFilePath = join(libDirPath, 'custom-index-code.js');
+        await writeFile(toFilePath, customCode, { encoding: 'utf8', flag: 'w' });
+
+        let script = this.dom.window.document.createElement('script');
+        script.id = basename(fromFilePath, '.js');
+        script.src = `lib/${basename(toFilePath)}`;
+
+        let customScript = this.dom.window.document.getElementById(script.id);
+        if (!customScript) {
+            let scripts = this.dom.window.document.getElementsByTagName('body')[0].getElementsByTagName('script');
+            for (let index = 0; index < scripts.length; index++) {
+                const s = scripts[index];
+                if (s.src === '') {
+                    s.parentNode.insertBefore(script, s);
+                    break;
+                }
             }
         }
     }
@@ -92,7 +167,7 @@ export class Driver {
 
             let tpcd = popupsContentFragment.getElementById('timerPopupCountDown');
             tpcd.innerHTML = `${settings.countDownTime}`;
-            popupsContentFragment.getElementById('timer-popup-text-warning-time').innerHTML = `${moment.duration(settings.countDownTime, 'seconds').humanize()}`;
+            //popupsContentFragment.getElementById('timer-popup-text-warning-time').innerHTML = `${moment.duration(settings.countDownTime, 'seconds').humanize()}`;
             popupsContentFragment.getElementById('warning-popup-text-course-time').innerHTML = `${moment.duration(settings.courseTotalTime, 'seconds').humanize()}`;
 
             let appElement = this.dom.window.document.getElementById('app');
@@ -204,9 +279,10 @@ export const modifyCourse = async (settings: ISettings) => {
     const libDirPath = join(settings.paths.extractedCourse, 'scormcontent', 'lib');
 
     await driver.loadHtmlFile(indexFilePath);
-    driver.insertBodyTagEventHandlers(settings);
+    //driver.insertBodyTagEventHandlers(settings);
     await driver.insertPopupsMarkupInIndexHtml(settings, join(contentDirPath, 'popups.html'));
     await driver.insertCustomIndexStyle(join(contentDirPath, 'custom-index-styles.css'), join(libDirPath, 'custom-index-styles.css'));
+    await driver.insertHumanizerScript(settings, contentDirPath, libDirPath);
     await driver.insertCustomCodeScriptInIndexHtml(settings, contentDirPath, libDirPath);
     await driver.applyIndexHtmlScriptTagCodeMods(contentDirPath);
     await driver.saveHtmlFile(indexFilePath);
