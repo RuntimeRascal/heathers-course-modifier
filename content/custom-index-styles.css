@@ -1,3 +1,4 @@
+/* Start custom CSS for the idle timer and warning message */
 #idleDiv .popup {
     position: relative;
     width: 35%;
@@ -60,3 +61,5 @@
         top: 20%;
     }
 }
+
+/* End custom CSS for the idle timer and warning message */

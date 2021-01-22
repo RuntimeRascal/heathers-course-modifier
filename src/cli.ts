@@ -78,7 +78,18 @@ const getArgs = async () => {
 
 const run = async () => {
     let settings = await getArgs();
-
+    // settings = {
+    //     countDownTime: settings.countDownTime, courseTotalTime: settings.courseTotalTime, idleTime: settings.idleTime,
+    //     course: settings.course,
+    //     paths: {
+    //         coursesDirectory: 'C:\\source\\heathers-course-modifier\\courses',
+    //         workingDirectory: 'C:\\source\\heathers-course-modifier\\working',
+    //         modifiedDirectory: 'C:\\source\\heathers-course-modifier\\modified-courses',
+    //         originalCourse: 'C:\\source\\heathers-course-modifier\\courses\\writing-good-contracts-3-hours-scorm12-jkMEYrg-.zip',
+    //         extractedCourse: 'C:\\source\\heathers-course-modifier\\working\\writing-good-contracts-3-hours-scorm12-jkMEYrg-',
+    //         modifiedCourse: 'C:\\source\\heathers-course-modifier\\modified-courses\\writing-good-contracts-3-hours-scorm12-jkMEYrg-.zip',
+    //     }
+    // }
     await DiskHelper.extractSelectedCourse(settings);
     await modifyCourse(settings);
     await DiskHelper.archiveSelectedCourse(settings);

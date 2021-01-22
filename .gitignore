@@ -4,6 +4,8 @@ working/**
 modified-courses/**
 **/*.docx
 *.docx
+temp.md
+temp.html
 
 # Logs
 logs

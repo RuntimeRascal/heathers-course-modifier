@@ -14,7 +14,9 @@ export class DiskHelper {
         } else
             dir = join(__dirname, '..\\', 'courses');
 
-        return { courses: await readdir(dir), coursesDirectory: dir };
+        let contents = await readdir(dir);
+        let allZips = contents.filter(c => c.endsWith('.zip'));
+        return { courses: allZips, coursesDirectory: dir };
     }
 
     static ensureWorkingDirectory = async (settings: ISettings) => {
